@@ -220,26 +220,35 @@ public:
         pchMessageStart[3] = 0xf5;
         nDefaultPort = 55103;
         nPruneAfterHeight = 1000;
+        unsigned int nBits = 0x00001000;
+        for (; nBits < 0xffffffff; ++nBits) {
+            arith_uint256 bnTarget;
+            bool fNegative, fOverflow;
+            bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
+            if (!fNegative && bnTarget != 0 && !fOverflow && bnTarget <= UintToArith256(consensus.powLimit)) {
+                break;
+            }
+        }
         int secs = time(NULL);
         int nNonce = (int)1e4;
-        for (; nNonce < (int)1e9; ++nNonce) {       
-            genesis = CreateGenesisBlock(secs, nNonce, 0x1e0ffff0, 1, 50 * COIN);
+        for (; nNonce < (int)1e13; ++nNonce) {       
+            genesis = CreateGenesisBlock(secs, nNonce, nBits, 1, 50 * COIN);
             consensus.hashGenesisBlock = genesis.GetHash();
             arith_uint256 bnTarget;
-            bool fNegative, fOveflow;
-            bnTarget.SetCompact(0x1e0ffff0, &fNegative, &fOveflow);
+            bool fNegative, fOverflow;
+            bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
             if (UintToArith256(consensus.hashGenesisBlock) <= bnTarget) {
                 break;
             }
         }
         fprintf(stderr, "nNonce: %d ||| secs: %d\n", nNonce, secs);
-        genesis = CreateGenesisBlock(secs, nNonce, 0x1e0ffff0, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(secs, nNonce, nBits, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         // assert(consensus.hashGenesisBlock == uint256S("0x4966625a4b2851d9fdee139e56211a0d88575f59ed816ff5e6a63deb4e3e29a0"));
         // assert(genesis.hashMerkleRoot == uint256S("0x97ddfbbae6be97fd6cdf3e7ca13232a3afff2353e29badfab7f73011edd4ced9"));
 
-        vFixedSeeds.clear();
-        /*vSeeds.clear();
+        /*vFixedSeeds.clear();
+        vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
         vSeeds.emplace_back("testnet-seed.chaindev_latokentools.com", true);
         vSeeds.emplace_back("seed-b.chaindev_latoken.loshan.co.uk", true);
