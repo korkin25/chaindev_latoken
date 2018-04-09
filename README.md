@@ -11,27 +11,12 @@ Chaindev_Latoken Core integration/staging tree
 1. Основное действие происходит в файле src/chainparams.cpp. Меняем параметры класса CTestNetParams, но то же самое можно делать и с CChainMainNetParams. Выставляйте consensus.BIP34Height = 0; сonsensus.BIP34Hash = uint256S("0x00"); consensus.BIP65Height = 0; consensus.BIP66Height = 0; - значения с каких блоков в основной цепочке принимаются изменения протоколов BIP34, BIP65, BIP66 - у нас они сразу же. 
 2. consensus.powLimit = uint256S("0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff") - выставляется в отличии от биткоина всего с 1 начальным нулем, ибо мы для начала хотим такую сложность сети, чтобы быстро генерить блоки - это верхний предел для сложности генерации блоков. О difficulty можно почитать тут - https://bitcoin.org/en/developer-reference#target-nbits и вообще https://bitcoin.org/en/developer-reference и https://bitcoin.org/en/developer-guide для понимания того, как работает блокчейн биткоина. 
 3. consensus.nPowTargetTimespan = 4 * 60; - 4 минуты, сколько продолжается время для текущей сложности
-consensus.nPowTargetSpacing = 60; - 1 минута, через сколько генерятся блоки в цепочке;        consensus.nMinerConfirmationWindow = consensus.nPowTargetTimespan / consensus.nPowTargetSpacing; - через сколько блоков меняется сложность
-consensus.nRuleChangeActivationThreshold = 0.75 * consensus.nMinerConfirmationWindow; - 75% от предыдущего параметра для тестовой сети и 95% для основной сети.
-
-consensus.fPowAllowMinDifficultyBlocks = true - нам нужна минимальная сложность;
-consensus.fPowNoRetargeting = false - мы хотим retargeting; 
-consensus.nMinimumChainWork = uint256S("0x00") - вначале 0 для сети;
-consensus.defaultAssumeValid = uint256S("0x00"); - валидная цепочка для нулевого блока (параметр для оптимизации, не влияющий на запуск сети)
-
-pchMessageStart[0] = 0xf2;
-pchMessageStart[1] = 0xde;
-pchMessageStart[2] = 0xc3;
-pchMessageStart[3] = 0xf5; - ставьте какими угодно, примерно радномными, странный параметр, скорее всего используется для генерации сообщений между нодами в сети с определенным началом
-nDefaultPort = 55103; - выставляем внутренний порт для своей сети
-nPruneAfterHeight = 1000; - через сколько блоков в цепочке удалять старые блоки. Дальше как в файле src/chainparams.cpp вставляете кусок, начиная с unsigned int nBits = 0x00001000; до genesis = CreateGenesisBlock(secs, nNonce, nBits, 1, 50 * COIN); - это генерирует вам нужные параметры timestamp, nNonce, nBits. Затем после генерации закомменьте часть с циклами и выставите найденные константые значение и собирете снова. Закомменьте следующие строчки от assert до base58 невключительно. Выставьте в первых четырех массивах base58Prefixes вторые элементы какие хотите до 255 - для того, чтобы ваши адреса сети имели специфичный вид. В последних двух третий и четвертый элементы.
-checkpointData = {
+4. consensus.nPowTargetSpacing = 60; - 1 минута, через сколько генерятся блоки в цепочке;      consensus.nMinerConfirmationWindow = consensus.nPowTargetTimespan / consensus.nPowTargetSpacing; - через сколько блоков меняется сложность consensus.nRuleChangeActivationThreshold = 0.75 * consensus.nMinerConfirmationWindow; - 75% от предыдущего параметра для тестовой сети и 95% для основной сети. consensus.fPowAllowMinDifficultyBlocks = true - нам нужна минимальная сложность; consensus.fPowNoRetargeting = false - мы хотим retargeting; 
+consensus.nMinimumChainWork = uint256S("0x00") - вначале 0 для сети; consensus.defaultAssumeValid = uint256S("0x00"); - валидная цепочка для нулевого блока (параметр для оптимизации, не влияющий на запуск сети) pchMessageStart[0] = 0xf2; pchMessageStart[1] = 0xde; pchMessageStart[2] = 0xc3; pchMessageStart[3] = 0xf5; - ставьте какими угодно, примерно радномными, странный параметр, скорее всего используется для генерации сообщений между нодами в сети с определенным началом nDefaultPort = 55103; - выставляем внутренний порт для своей сети; nPruneAfterHeight = 1000; - через сколько блоков в цепочке удалять старые блоки. Дальше как в файле src/chainparams.cpp вставляете кусок, начиная с unsigned int nBits = 0x00001000; до genesis = CreateGenesisBlock(secs, nNonce, nBits, 1, 50 * COIN); - это генерирует вам нужные параметры timestamp, nNonce, nBits. Затем после генерации закомменьте часть с циклами и выставите найденные константые значение и собирете снова. Закомменьте следующие строчки от assert до base58 невключительно. Выставьте в первых четырех массивах base58Prefixes вторые элементы какие хотите до 255 - для того, чтобы ваши адреса сети имели специфичный вид. В последних двух третий и четвертый элементы. checkpointData = {
     {
         {0, consensus.hashGenesisBlock},
     }
-};
-
-chainTxData = ChainTxData{
+}; chainTxData = ChainTxData{
     0,
     0,
     0
