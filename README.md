@@ -28,16 +28,5 @@ Chaindev_Latoken Core integration/staging tree
 9. Снова make и ./src/chaindev_latokend -testnet
 10. Сеть локально запущена, к ней можно обращаться через ./src/chaindev_latoken-cli -testnet <commmand> (вместо <command> например getnewaddress - выведи произвольный валидный адрес в сети или generate n m - намайни до n блоков за m итераций).
 
-Важный update: выбор так называемого параметра блока nBits в src/chainparams.cpp, который определяет таргет для майнеров. Его нужно выбирать в зависимости от выставленного consensus.powLimit. Для uint256S("0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff") - на старте подходят все хеши с одним нулем вначале, что является начальным таргетом для развертывания тестовой сети, ибо мы хотим генерировать блоки быстро с обычным процессором. Для него подходят исходные nBits. выставленные в сети у genesisBlock у litecoin и bitcoin. Для значений с большим числом нулей - его также надо перебрать с помощью тупого перебора всех uint32 и условий в файле src/pow.cpp. Обновленнйы код можно посмотреть в файле src/chainparams.cpp в классе CChainTestNetParams.
-
-unsigned int nBits = 0x00001000;
-for (; nBits < 0xffffffff; ++nBits) {
-    arith_uint256 bnTarget;
-    bool fNegative, fOverflow;
-    bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
-    if (!fNegative && bnTarget != 0 && !fOverflow && bnTarget <= UintToArith256(consensus.powLimit)) {
-        break;
-    }
-}
-        
+Важный update: выбор так называемого параметра блока nBits в src/chainparams.cpp, который определяет таргет для майнеров. Его нужно выбирать в зависимости от выставленного consensus.powLimit. Для uint256S("0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff") - на старте подходят все хеши с одним нулем вначале, что является начальным таргетом для развертывания тестовой сети, ибо мы хотим генерировать блоки быстро с обычным процессором. Для него подходят исходные nBits. выставленные в сети у genesisBlock у litecoin и bitcoin. Для значений с большим числом нулей - его также надо перебрать с помощью тупого перебора всех uint32 и условий в файле src/pow.cpp. Обновленнйы код можно посмотреть в файле src/chainparams.cpp в классе CChainTestNetParams.   
    
