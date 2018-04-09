@@ -231,7 +231,7 @@ public:
         }
         int secs = time(NULL);
         int nNonce = (int)1e4;
-        for (; nNonce < (int)1e13; ++nNonce) {       
+        for (; nNonce < (int)1e18; ++nNonce) {       
             genesis = CreateGenesisBlock(secs, nNonce, nBits, 1, 50 * COIN);
             consensus.hashGenesisBlock = genesis.GetHash();
             arith_uint256 bnTarget;
