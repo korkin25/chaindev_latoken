@@ -55,4 +55,16 @@ static const unsigned int MAX_BLOCK_WEIGHT = 2500000; с 4 миллионов б
 10. Сеть локально запущена, к ней можно обращаться через ./src/chaindev_latoken-cli -testnet <commmand> (вместо <command> например getnewaddress - выведи произвольный валидный адрес в сети или generate n m - намайни до n блоков за m итераций).
 
 Важный update: выбор так называемого параметра блока nBits в src/chainparams.cpp, который определяет таргет для майнеров. Его нужно выбирать в зависимости от выставленного consensus.powLimit. Для uint256S("0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff") - на старте подходят все хеши с одним нулем вначале, что является начальным таргетом для развертывания тестовой сети, ибо мы хотим генерировать блоки быстро с обычным процессором. Для него подходят исходные nBits. выставленные в сети у genesisBlock у litecoin и bitcoin. Для значений с большим числом нулей - его также надо перебрать с помощью тупого перебора всех uint32 и условий в файле src/pow.cpp. Обновленнйы код можно посмотреть в файле src/chainparams.cpp в классе CChainTestNetParams.   
+
+
+1. Далее ставим докер
+2. Создаем аккаунт на hub.docker.com и репозиторий там
+3. sudo docker login - заходим в аккаунт
+4. Создаете Dockerfile в папке как у меня и конфигурируйте порты в соответствии с вамиши портами (порт TestNet в chainparams.cpp, и порт TestNet в chainparamsbase.cpp для RPC соединения). Указываете там в rpcconnect, addnode, rpcallowip нужные адреса серверов. В rpcallowip всегда добавлять маску в конце даже если адрес один - /0. Для запуска в режиме демона daemon=1.
+5. sudo docker build . -it <account_name>/<image_name> (называете как хотите свой image)
+6. sudo docker push <account_name>/<image_name>
+7. На каком-нибудь сервере sudo docker pull <account_name>/<image_name>
+8. sudo docker run -d -it -p <port1>:<port1> -p <port2>:<port2> --name <new_name> <account_name>/<image_name> ./src/bitcoind
+9. После успешного запуска делаете docker exec -it <new_name> bash и заходите внутрь контейнера
+10. ./src/chaindevlatoken-cli для разных запросов: например generate 1000 1000000 (1000 блоков за 1000000 итераций), getnewaddress, getbalance, sendtoaddress <address> <amount>, getrawmempool, getblockchaininfo, getnetworkinfo, getnodeinfo.
    
