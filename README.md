@@ -38,13 +38,14 @@ static const unsigned int MAX_BLOCK_WEIGHT = 2500000; с 4 миллионов б
 6. ./src/chaindev_latokend -testnet
 7. Подождите и получите secs и nNonce.
 8. Поменяйте их значения на полученные в файле /src/chainparams.cpp в классе CTestNetParams. Закомментируйте: 
-        for (; nNonce < (int)1e9; ++nNonce) {       
+        for (; nNonce < (int)2e9; ++nNonce) {       
             genesis = CreateGenesisBlock(secs, nNonce, 0x1e0ffff0, 1, 50 * COIN);
             consensus.hashGenesisBlock = genesis.GetHash();
             arith_uint256 bnTarget;
             bool fNegative, fOveflow;
             bnTarget.SetCompact(0x1e0ffff0, &fNegative, &fOveflow);
-            if (UintToArith256(consensus.hashGenesisBlock) <= bnTarget) {
+            if (UintToArith256(genesis.GetPoWHash()) <= bnTarget) {
+                consensus.hashGenesisBlock = genesis.GetHash();
                 break;
             }
         }
