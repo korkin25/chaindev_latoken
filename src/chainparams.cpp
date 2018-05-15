@@ -220,7 +220,29 @@ public:
         pchMessageStart[3] = 0xf5;
         nDefaultPort = 55103;
         nPruneAfterHeight = 1000;
-        unsigned int nBits = 0x00001000;
+        unsigned int nNonce = 379165;
+        unsigned int secs = 1526374882;
+
+        /*  ПЕРВЫЙ АЛГОРИТМ БЕЗ КАСТОМИЗАЦИИ nBits (таргета в зависимости от consensus.powLimit). Расскомментируйте это и закомментируйте nNonce и secs с выставленными значениями выше. 
+            Потом после запуска с нахождением nNonce и secs закомментируйте алгоритм и раскомментируйте и выставите новые найденные значения nNonce и secs
+            
+        unsigned int nNonce = (int)1e4;
+        unsigned int secs = time(NULL);
+        for (; nNonce < (int)2e9; ++nNonce) {       
+            genesis = CreateGenesisBlock(secs, nNonce, 0x1e0ffff0, 1, 50 * COIN);
+            arith_uint256 bnTarget;
+            bool fNegative, fOverflow;
+            bnTarget.SetCompact(0x1e0ffff0, &fNegative, &fOverflow); 
+            if (UintToArith256(genesis.GetPoWHash()) <= bnTarget) {
+                consensus.hashGenesisBlock = genesis.GetHash();
+                break;
+            }
+        }
+        fprintf(stderr, "nNonce: %d ||| secs: %d\n", nNonce, secs); */
+
+        /* ВТОРОЙ АЛГОРИТМ С КАСТОМИЗАЦИЕЙ nBits (таргета в зависимости от consensus.powLimit), если вы увеличиваете количество нулей у consensus.powLimit. Инсипукция та же самая, только еще выставляете значение nBits после нахождения и комментируете все остальное:
+
+        unsigned int nBits = 0x1e000000;
         for (; nBits < 0xffffffff; ++nBits) {
             arith_uint256 bnTarget;
             bool fNegative, fOverflow;
@@ -229,21 +251,30 @@ public:
                 break;
             }
         }
-        int secs = time(NULL);
-        int nNonce = (int)1e4;
-        for (; nNonce < (int)1e18; ++nNonce) {       
-            genesis = CreateGenesisBlock(secs, nNonce, nBits, 1, 50 * COIN);
-            consensus.hashGenesisBlock = genesis.GetHash();
-            arith_uint256 bnTarget;
-            bool fNegative, fOverflow;
-            bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
-            if (UintToArith256(consensus.hashGenesisBlock) <= bnTarget) {
+        unsigned int nNonce = (int)1e4;
+        unsigned int secs = time(NULL);
+        for (; ; ) {
+            nNonce = (int)1e4;
+            secs = time(NULL);
+            bool done = false;
+            fprintf(stderr, "nBits: %u ||| secs: %u\n", nBits, secs); 
+            for (; nNonce < (unsigned int)4e9; ++nNonce) {       
+                genesis = CreateGenesisBlock(secs, nNonce, nBits, 1, 50 * COIN);
+                consensus.hashGenesisBlock = genesis.GetHash();
+                arith_uint256 bnTarget;
+                bool fNegative, fOverflow;
+                bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
+                if (UintToArith256(genesis.GetPoWHash()) <= bnTarget) {
+                    done = true;
+                    break;
+                }
+            }
+            if (done) {
                 break;
             }
         }
-        fprintf(stderr, "nNonce: %d ||| secs: %d\n", nNonce, secs);
-        genesis = CreateGenesisBlock(secs, nNonce, nBits, 1, 50 * COIN);
-        consensus.hashGenesisBlock = genesis.GetHash();
+        fprintf(stderr, "nNonce: %u\n", nNonce);   */
+
         // assert(consensus.hashGenesisBlock == uint256S("0x4966625a4b2851d9fdee139e56211a0d88575f59ed816ff5e6a63deb4e3e29a0"));
         // assert(genesis.hashMerkleRoot == uint256S("0x97ddfbbae6be97fd6cdf3e7ca13232a3afff2353e29badfab7f73011edd4ced9"));
 
