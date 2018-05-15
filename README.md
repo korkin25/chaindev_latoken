@@ -6,6 +6,7 @@ Chaindev_Latoken Core integration/staging tree
 1. Придумываем название для нашего токена - например, chaindev_latoken.
 2. Переименовываем склонированную папку в chaindev_latoken.
 3. В ней в терминале делаем команду grep -rl 'litecoin' ./ | xargs sed -i 's/litecoin/chaindev_latoken/g' - команда заменит все вхождения litecoin в файлах на chaindev_latoken и после сборки сгенерирует файлы chaindev_latokend и chaindev_latoken-cli как у биткоина только с названием вашего альта.
+4. Проблема с запуском на семинаре была связана с тем, что у LTC таки есть алгоритмические отличия от BTC (хотя я думал до семинара, что нет). У них упрощенная проверка условия Proof of Work, которая работает по-другому и у каждого блока есть метод GetPoWHash, который берет хеш отличный от GetHash блока и проверяет его. Связано это с тем, что LTC использует криптографию Script, а BTC SHA256. Для первого из-за его плохой параллелизации решено было упростить проверки для ускорения выполнения. Поэтому в переборе nNonce просто надо брать genesis.GetPoWHash(). 
 
 Инструкция по выставлению параметров:
 1. Основное действие происходит в файле src/chainparams.cpp. Меняем параметры класса CTestNetParams, но то же самое можно делать и с CChainMainNetParams. Выставляйте consensus.BIP34Height = 0; сonsensus.BIP34Hash = uint256S("0x00"); consensus.BIP65Height = 0; consensus.BIP66Height = 0; - значения с каких блоков в основной цепочке принимаются изменения протоколов BIP34, BIP65, BIP66 - у нас они сразу же. 
@@ -38,13 +39,14 @@ static const unsigned int MAX_BLOCK_WEIGHT = 2500000; с 4 миллионов б
 6. ./src/chaindev_latokend -testnet
 7. Подождите и получите secs и nNonce.
 8. Поменяйте их значения на полученные в файле /src/chainparams.cpp в классе CTestNetParams. Закомментируйте: 
-        for (; nNonce < (int)1e9; ++nNonce) {       
+        for (; nNonce < (int)2e9; ++nNonce) {       
             genesis = CreateGenesisBlock(secs, nNonce, 0x1e0ffff0, 1, 50 * COIN);
             consensus.hashGenesisBlock = genesis.GetHash();
             arith_uint256 bnTarget;
             bool fNegative, fOveflow;
             bnTarget.SetCompact(0x1e0ffff0, &fNegative, &fOveflow);
-            if (UintToArith256(consensus.hashGenesisBlock) <= bnTarget) {
+            if (UintToArith256(genesis.GetPoWHash()) <= bnTarget) {
+                consensus.hashGenesisBlock = genesis.GetHash();
                 break;
             }
         }
@@ -53,4 +55,16 @@ static const unsigned int MAX_BLOCK_WEIGHT = 2500000; с 4 миллионов б
 10. Сеть локально запущена, к ней можно обращаться через ./src/chaindev_latoken-cli -testnet <commmand> (вместо <command> например getnewaddress - выведи произвольный валидный адрес в сети или generate n m - намайни до n блоков за m итераций).
 
 Важный update: выбор так называемого параметра блока nBits в src/chainparams.cpp, который определяет таргет для майнеров. Его нужно выбирать в зависимости от выставленного consensus.powLimit. Для uint256S("0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff") - на старте подходят все хеши с одним нулем вначале, что является начальным таргетом для развертывания тестовой сети, ибо мы хотим генерировать блоки быстро с обычным процессором. Для него подходят исходные nBits. выставленные в сети у genesisBlock у litecoin и bitcoin. Для значений с большим числом нулей - его также надо перебрать с помощью тупого перебора всех uint32 и условий в файле src/pow.cpp. Обновленнйы код можно посмотреть в файле src/chainparams.cpp в классе CChainTestNetParams.   
+
+
+1. Далее ставим докер
+2. Создаем аккаунт на hub.docker.com и репозиторий там
+3. sudo docker login - заходим в аккаунт
+4. Создаете Dockerfile в папке как у меня и конфигурируйте порты в соответствии с вамиши портами (порт TestNet в chainparams.cpp, и порт TestNet в chainparamsbase.cpp для RPC соединения). Указываете там в rpcconnect, addnode, rpcallowip нужные адреса серверов. В rpcallowip всегда добавлять маску в конце даже если адрес один - /0. Для запуска в режиме демона daemon=1.
+5. sudo docker build . -it <account_name>/<image_name> (называете как хотите свой image)
+6. sudo docker push <account_name>/<image_name>
+7. На каком-нибудь сервере sudo docker pull <account_name>/<image_name>
+8. sudo docker run -d -it -p <port1>:<port1> -p <port2>:<port2> --name <new_name> <account_name>/<image_name> ./src/bitcoind
+9. После успешного запуска делаете docker exec -it <new_name> bash и заходите внутрь контейнера
+10. ./src/chaindevlatoken-cli для разных запросов: например generate 1000 1000000 (1000 блоков за 1000000 итераций), getnewaddress, getbalance, sendtoaddress <address> <amount>, getrawmempool, getblockchaininfo, getnetworkinfo, getnodeinfo.
    
