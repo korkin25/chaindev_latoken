@@ -19,5 +19,4 @@ RUN ./autogen.sh
 RUN ./configure
 RUN make -j 4
 
-EXPOSE 55909 55908
-
+EXPOSE 55103 55102
