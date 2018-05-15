@@ -12,11 +12,11 @@ RUN apt-get install -y libminiupnpc-dev libzmq3-dev
 RUN apt-get install -y libdb4.8-dev libdb4.8++-dev
 
 COPY . /opt
-RUN mkdir -p /root/.bitcoin
-COPY ./bitcoin.conf /root/.bitcoin/bitcoin.conf
+RUN mkdir -p /root/.chaindev_latoken
+COPY ./chaindev_latoken.conf /root/.chaindev_latoken/chaindev_latoken.conf
 WORKDIR /opt
 RUN ./autogen.sh
 RUN ./configure
-RUN make -j 4
+RUN make
 
 EXPOSE 55103 55102
